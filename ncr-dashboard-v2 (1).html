@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>October NCR plan | Vendor allocation and churn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --paper:#F5F6F8; --white:#FFFFFF; --ink:#14213D; --slate:#5B6676; --line:#DDE1E7;
+  --orange:#FF5A00; --moss:#2F7D5B; --blue:#2F5D8A; --red:#B3372F; --amber:#9A6700;
+  --head:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+aside{position:sticky;top:0;align-self:start;height:100vh;padding:28px 22px;border-right:1px solid var(--line);background:var(--white);display:flex;flex-direction:column;gap:28px}
+aside .brand{font-family:var(--head);font-weight:700;font-size:20px;line-height:1.15;letter-spacing:-0.01em}
+aside .brand small{display:block;font-family:var(--body);font-weight:400;font-size:13px;color:var(--slate);margin-top:6px;letter-spacing:0}
+nav{display:flex;flex-direction:column;gap:2px}
+nav a{text-decoration:none;padding:7px 10px;border-radius:6px;color:var(--slate);font-size:14px}
+nav a:hover{background:var(--paper);color:var(--ink)}
+aside .meta{margin-top:auto;font-size:12px;color:var(--slate)}
+main{padding:40px clamp(20px,4vw,56px) 80px;max-width:1080px}
+h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:-0.015em;line-height:1.1}
+h1{font-size:clamp(30px,4.4vw,46px);font-weight:700;max-width:18ch}
+h2{font-size:26px;font-weight:700;margin-bottom:6px}
+h3{font-size:17px;font-weight:500;margin:0 0 10px}
+.lede{color:var(--slate);max-width:64ch;margin:14px 0 0}
+section{padding-top:56px}
+.num{font-variant-numeric:tabular-nums}
+
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:30px 0 22px}
+.seg-ctl{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--white);overflow:hidden}
+.seg-ctl button{font:inherit;font-size:14px;padding:9px 14px;border:0;background:transparent;color:var(--slate);cursor:pointer;border-right:1px solid var(--line)}
+.seg-ctl button:last-child{border-right:0}
+.seg-ctl button:hover{color:var(--ink)}
+.seg-ctl button[aria-pressed="true"]{background:var(--ink);color:var(--white)}
+.tgt{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--slate);margin-left:auto}
+input[type=number],input[type=text],select{font:inherit;font-size:14px;color:var(--ink);background:var(--white);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
+input[type=number]{width:130px}
+.custom{font-size:12px;color:var(--amber);background:#FBF1D9;padding:3px 9px;border-radius:5px}
+
+.bars{position:relative;margin:8px 0 8px;padding:34px 0 8px}
+.row-l{display:flex;justify-content:space-between;font-size:13px;color:var(--slate);margin:0 0 6px}
+.row-l b{font-weight:500;color:var(--ink)}
+.track{position:relative;display:flex;height:54px;background:#E8EBF0;border-radius:6px;overflow:hidden}
+.track.thin{height:26px;margin-top:4px}
+.seg{height:100%;display:flex;align-items:center;padding:0 10px;font-size:12px;color:#fff;white-space:nowrap;overflow:hidden;border-right:2px solid var(--paper);transition:width .5s ease}
+.seg.light{color:var(--ink)}
+.fill{height:100%;background:var(--moss);transition:width .5s ease}
+.marker{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--orange);transition:left .5s ease;pointer-events:none}
+.marker span{position:absolute;top:2px;left:6px;font-size:12px;font-weight:500;color:var(--orange);white-space:nowrap;background:var(--paper);padding:0 4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:12px 0 0;font-size:13px;color:var(--slate)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:30px 0 8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stats>div{padding:16px 18px;border-right:1px solid var(--line)}
+.stats>div:first-child{padding-left:0}
+.stats>div:last-child{border-right:0}
+.stats .l{font-size:13px;color:var(--slate);margin:0}
+.stats .v{font-family:var(--head);font-size:28px;font-weight:700;margin:2px 0 0;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
+.stats .s{font-size:12px;color:var(--slate);margin:2px 0 0}
+.neg{color:var(--red)} .pos{color:var(--moss)}
+
+.assump{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 28px;margin:26px 0 0}
+.assump label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--slate)}
+.assump label span{display:flex;justify-content:space-between}
+.assump b{font-weight:500;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--ink)}
+
+.chartbox{position:relative;height:280px;margin:18px 0 0}
+.chartbox.tall{height:360px}
+.key{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--slate);margin-top:14px}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+th{font-weight:500;color:var(--slate);text-align:right;padding:8px 8px;border-bottom:1px solid var(--ink);font-size:12.5px}
+td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th.left,td.left{text-align:left}
+tfoot td{border-bottom:0;border-top:1px solid var(--ink);font-weight:500}
+td select{width:100%;padding:5px 6px;font-size:13px}
+input.ask{width:112px;padding:5px 7px;font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+input.ask.edited{border-color:var(--amber);background:#FFFAEB}
+input.fb{width:100%;min-width:170px;padding:5px 8px;font-size:13px;text-align:left}
+.tblwrap{overflow-x:auto;margin-top:16px}
+.btn{font:inherit;font-size:14px;padding:8px 14px;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:8px;cursor:pointer}
+.btn:hover{background:var(--ink);color:var(--white)}
+.chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:5px;background:#F6DAD7;color:var(--red)}
+.chip.w{background:#FBF1D9;color:var(--amber)}
+.note{font-size:13px;color:var(--slate);max-width:70ch}
+.note li{margin:4px 0}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line)}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px 20px;padding:16px 20px;border-right:0;border-bottom:1px solid var(--line)}
+  aside .brand small,aside .meta{display:none}
+  nav{flex-direction:row;flex-wrap:wrap}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stats>div:nth-child(2){border-right:0}
+  .stats>div:nth-child(3){padding-left:0}
+  .assump{grid-template-columns:1fr}
+  .tgt{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){.seg,.fill,.marker{transition:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside>
+  <div class="brand">October NCR plan<small>Mostafa Ibrahim portfolio</small></div>
+  <nav aria-label="Sections">
+    <a href="#plan">Target plan</a>
+    <a href="#vendors">Vendor allocation</a>
+    <a href="#churn">Churn and inactivity</a>
+    <a href="#notes">Data and caveats</a>
+  </nav>
+  <div class="meta">36 active vendors<br>19 closed vendors excluded</div>
+</aside>
+
+<main>
+<header>
+  <h1>Where the 1.2M NCR target comes from</h1>
+  <p class="lede">Each vendor is asked for 1%, 1.5% or 2% of September GMV. Pick a scenario, change a tier, or type an exact ask for any vendor, and see how far the plan lands from target before and after allowing for vendors who say no.</p>
+</header>
+
+<section id="plan" style="padding-top:36px">
+  <div class="controls">
+    <div class="seg-ctl" role="group" aria-label="Scenario">
+      <button id="sA" type="button">A. Conservative</button>
+      <button id="sB" type="button">B. Stretch tiers</button>
+      <button id="sC" type="button">C. Stretch and keep actual</button>
+    </div>
+    <span id="cust" class="custom" hidden>Custom edits</span>
+    <label class="tgt">Target (EGP) <input type="number" id="target" value="1200000" step="10000" min="0"></label>
+  </div>
+
+  <div class="bars">
+    <div class="row-l"><span>Gross ask by vendor</span><b class="num" id="gTxt"></b></div>
+    <div class="track" id="gBar" role="img" aria-label="Segmented bar of gross NCR ask by vendor"></div>
+    <div class="row-l" style="margin-top:14px"><span>Expected after refusals</span><b class="num" id="eTxt"></b></div>
+    <div class="track thin"><div class="fill" id="eBar"></div></div>
+    <div class="marker" id="mk"><span id="mkT"></span></div>
+  </div>
+  <div class="legend" id="lg"></div>
+
+  <div class="stats">
+    <div><p class="l">Gross NCR</p><p class="v" id="kG"></p><p class="s" id="kGs"></p></div>
+    <div><p class="l">Risk-adjusted NCR</p><p class="v" id="kE"></p><p class="s" id="kEs"></p></div>
+    <div><p class="l">Gap to target</p><p class="v" id="kGap"></p><p class="s">After refusals</p></div>
+    <div><p class="l">Vendors at 1% / 1.5% / 2%</p><p class="v" id="kT"></p><p class="s" id="kTs"></p></div>
+  </div>
+
+  <div class="assump">
+    <label><span>Vendors who already pay accept <b id="pPv">95%</b></span><input type="range" id="pP" min="50" max="100" value="95"></label>
+    <label><span>Accept an increase above last month <b id="pUv">50%</b></span><input type="range" id="pU" min="0" max="100" value="50"></label>
+    <label><span>Vendors who never paid accept <b id="pNv">25%</b></span><input type="range" id="pN" min="0" max="100" value="25"></label>
+  </div>
+
+  <h3 style="margin-top:44px">Scenarios against the target</h3>
+  <div class="key"><span><i style="background:#2F5D8A"></i>Gross</span><span><i style="background:#2F7D5B"></i>Risk-adjusted</span><span><i style="background:#FF5A00"></i>Target</span></div>
+  <div class="chartbox"><canvas id="c1" role="img" aria-label="Gross and risk-adjusted NCR for scenarios A, B, C and your current plan against the target line.">Gross and risk-adjusted NCR for each scenario and the current plan versus the target.</canvas></div>
+</section>
+
+<section id="vendors">
+  <h2>Vendor allocation</h2>
+  <p class="lede">Ranked by the amount asked when the scenario loaded. Type an exact amount in the Ask column and the totals above update as you type. Choosing a tier again resets that vendor's ask to the tier amount. "Keep actual" means the vendor pays what they paid last month.</p>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Vendor</th><th>Sept GMV</th><th>Paid last month</th><th style="width:130px">Tier</th><th>Ask (editable)</th><th>Risk-adjusted</th></tr></thead>
+      <tbody id="tb"></tbody>
+      <tfoot><tr><td>Total</td><td></td><td id="tL"></td><td></td><td id="tA"></td><td id="tE"></td></tr></tfoot>
+    </table>
+  </div>
+  <p style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="tog" type="button">Show all 36</button><button class="btn" id="rst" type="button">Reset all edits</button></p>
+</section>
+
+<section id="churn">
+  <h2>Churn and inactivity</h2>
+  <p class="lede">Vendors that were active in May to August and then fell to zero, plus active vendors with an unusual decline. October figures are projected, so treat October-based flags as early signals. Notes you type in the Feedback column are saved in this browser.</p>
+
+  <div class="stats">
+    <div><p class="l">Confirmed churn</p><p class="v">16</p><p class="s">12 zero in Sept, 4 in Oct</p></div>
+    <div><p class="l">Prior monthly GMV lost</p><p class="v">717k</p><p class="s">Sum of May to Aug averages</p></div>
+    <div><p class="l">On the watchlist</p><p class="v">8</p><p class="s">Active, sharp decline</p></div>
+    <div><p class="l">NCR at risk</p><p class="v">127k</p><p class="s">Mostly 3m Essa, 125k</p></div>
+  </div>
+
+  <h3 style="margin-top:32px">Confirmed churn</h3>
+  <p class="note" style="margin:0">All 16 are on the closed list, so the detection rule matches your own list.</p>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Vendor</th><th>Avg GMV May to Aug</th><th>Sept</th><th>Oct (projected)</th><th>Last active</th><th class="left">Status</th><th class="left">Feedback</th></tr></thead>
+      <tbody id="ch1"></tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:44px">Watchlist: change versus May to Aug average</h3>
+  <div class="key"><span><i style="background:#B7BDC8"></i>September</span><span><i style="background:#FF5A00"></i>October (projected)</span></div>
+  <div class="chartbox tall"><canvas id="c2" role="img" aria-label="Horizontal bars of September and October GMV change versus the May to August average for eight watchlist vendors. Ibn Al Bahr, Am Nady, Loretto, 3m Essa and Gambary show the steepest declines.">Watchlist vendors and their GMV change.</canvas></div>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Watchlist vendor</th><th>Avg May to Aug</th><th>Sept</th><th>Oct (projected)</th><th class="left">Signal</th><th class="left">Feedback</th></tr></thead>
+      <tbody id="ch2"></tbody>
+    </table>
+  </div>
+  <datalist id="fbopts">
+    <option value="Terminated"></option>
+    <option value="Opened again"></option>
+    <option value="Contacted"></option>
+    <option value="Under review"></option>
+    <option value="No answer"></option>
+  </datalist>
+</section>
+
+<section id="notes">
+  <h2>Data and caveats</h2>
+  <ul class="note">
+    <li>Payments come from the "ad rev details sep" sheet: 64 outlet rows, 25 chain IDs, 1,064,613 in total, September only.</li>
+    <li>GMV comes from the October workbook, not a fresh Looker export. It covers May to September, and the October column looks like a run-rate projection.</li>
+    <li>Orders exist only for October 1 to 3, so churn is judged on GMV, not monthly orders.</li>
+    <li>The three acceptance rates are assumptions, not measured behaviour. Adjust them above.</li>
+    <li>Scenario C goes beyond the strict 1%, 1.5%, 2% tiers: 14 vendors already paying above 2% keep their actual amount.</li>
+    <li>A manually typed ask is counted as a custom amount. Risk-adjusted NCR treats it like any other ask: 95% of what a vendor already pays, 50% of an increase, 25% for vendors who never paid.</li>
+    <li>Snack and Go has October GMV but no orders on October 1 to 3, so its data may not match.</li>
+  </ul>
+  <footer class="note">Figures are in EGP. Typed asks reset when you reload the page; Feedback notes are kept in this browser.</footer>
+</section>
+</main>
+</div>
+
+<script>
+const V=[["Karam el Sham",27078305,276304],["Wa7ed Mashwy",16214366,326513],["Abo Younes",5453590,52632],["Classique Patisserie",2543408,0],["Mecca Juice",2831497,107502],["Sultana Ice Cream",2029454,2631],["Abo Rawia",1718520,72381],["BIN AQOOL",897485,17543],["Mohamed Ahmed",1035424,2104],["Aros Demashk",352134,4568],["3m Essa",960888,125008],["Rosé Paris",197080,20145],["7 Days Crepe",325144,8772],["Farag Abo Khaled",264773,0],["Tico Potato",325369,17276],["Zawati",209677,8142],["Tipas",238244,0],["Gambary El Mon",266578,0],["Abu Talaat",119829,3420],["Tasset Fool",97452,0],["Soho Suchi",63528,0],["Al Moamen",63763,0],["Ayam Zaman",51859,12859],["beek egypt",102206,0],["Renaissance Cinema",40463,0],["Koshari we Daka",20920,0],["Gedo Antar",20151,0],["Ibn Al Bahr",7648,0],["Romeo Grill",9083,0],["Popote Cafe",8710,2853],["Crepe House",20651,0],["Snack & Go",3180,276],["Rizo Broast",8542,0],["Kunafa Time",967,0],["Am Nady",4666,871],["Loretto",7375,1496]];
+const UP=new Set(["Karam el Sham","Abo Younes","Classique Patisserie","Sultana Ice Cream","Mohamed Ahmed"]);
+const $=id=>document.getElementById(id);
+const f=n=>Math.round(n).toLocaleString('en-US');
+const fk=n=>n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?Math.round(n/1e3)+'k':String(Math.round(n));
+
+const base=v=>{const r=v[2]/v[1]*100;return r>=1.75?2:r>=0.9?1.5:1};
+const scen=s=>V.map(v=>{let t=base(v);if(s!=='A'&&UP.has(v[0]))t=2;if(s==='C'&&v[2]>v[1]*t/100)return'k';return String(t)});
+const tierAsk=(i,m)=>m==='k'?V[i][2]:V[i][1]*parseFloat(m)/100;
+const exOf=(i,a,P,U,N)=>{const l=V[i][2];return l>0?Math.min(l,a)*P+Math.max(a-l,0)*U:a*N};
+const pr=()=>[$('pP').value/100,$('pU').value/100,$('pN').value/100];
+
+let cur='B',modes=scen('B'),showAll=false;
+const ov=V.map(()=>null);
+const getAsk=i=>ov[i]!==null?ov[i]:tierAsk(i,modes[i]);
+
+function calcPreset(ms,P,U,N){let A=0,E=0;ms.forEach((m,i)=>{const a=tierAsk(i,m);A+=a;E+=exOf(i,a,P,U,N)});return{A,E}}
+function calcCur(P,U,N){
+  let A=0,E=0;const c={'1':0,'1.5':0,'2':0,k:0,x:0};
+  V.forEach((v,i)=>{const a=getAsk(i);A+=a;E+=exOf(i,a,P,U,N);c[ov[i]!==null?'x':modes[i]]++});
+  return{A,E,c};
+}
+
+const SEGC=['#14213D','#2F5D8A','#5B8DB8','#8FB3D1','#B7CFE2','#D3DFEA'];
+
+function build(){
+  const order=V.map((v,i)=>i).sort((a,b)=>getAsk(b)-getAsk(a));
+  const tb=$('tb');tb.innerHTML='';
+  order.forEach((i,rank)=>{
+    const tr=document.createElement('tr');tr.dataset.rank=rank;
+    tr.innerHTML='<td></td><td>'+fk(V[i][1])+'</td><td>'+(V[i][2]?f(V[i][2]):'-')+'</td><td><select id="sel'+i+'"><option value="1">1%</option><option value="1.5">1.5%</option><option value="2">2%</option><option value="k">Keep actual</option><option value="x" disabled>Custom</option></select></td><td><input class="ask" id="ask'+i+'" type="number" min="0" step="1"></td><td id="e'+i+'"></td>';
+    tr.firstChild.textContent=(rank+1)+'. '+V[i][0];
+    const sel=tr.querySelector('select'),inp=tr.querySelector('input');
+    sel.setAttribute('aria-label','Tier for '+V[i][0]);
+    inp.setAttribute('aria-label','Ask amount for '+V[i][0]);
+    sel.addEventListener('change',e=>{modes[i]=e.target.value;ov[i]=null;cur=null;update()});
+    inp.addEventListener('input',e=>{
+      const raw=e.target.value;
+      ov[i]=raw===''?null:Math.max(0,parseFloat(raw)||0);
+      cur=null;update();
+    });
+    inp.addEventListener('change',()=>update());
+    inp.addEventListener('blur',()=>update());
+    tb.appendChild(tr);
+  });
+  vis();
+}
+function vis(){[...$('tb').children].forEach(tr=>{tr.hidden=!(showAll||tr.dataset.rank<20)});$('tog').textContent=showAll?'Show top 20':'Show all 36'}
+
+const c1=new Chart($('c1'),{type:'bar',data:{labels:['A. Conservative','B. Stretch tiers','C. Stretch and keep actual','Your current plan'],datasets:[
+ {label:'Gross',data:[0,0,0,0],backgroundColor:'#2F5D8A',borderRadius:4,barThickness:30,order:2},
+ {label:'Risk-adjusted',data:[0,0,0,0],backgroundColor:'#2F7D5B',borderRadius:4,barThickness:30,order:2},
+ {type:'line',label:'Target',data:[0,0,0,0],borderColor:'#FF5A00',borderDash:[6,4],borderWidth:2,pointRadius:0,order:1}]},
+ options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+f(c.parsed.y)}}},
+ scales:{y:{beginAtZero:true,ticks:{callback:v=>fk(v),color:'#5B6676'},grid:{color:'#DDE1E7'}},x:{ticks:{color:'#5B6676'},grid:{display:false}}}}});
+
+function update(){
+  const [P,U,N]=pr(),T=parseFloat($('target').value)||0;
+  $('pPv').textContent=$('pP').value+'%';$('pUv').textContent=$('pU').value+'%';$('pNv').textContent=$('pN').value+'%';
+  const r=calcCur(P,U,N);
+
+  let L=0;
+  V.forEach((v,i)=>{
+    L+=v[2];
+    const a=getAsk(i),inp=$('ask'+i),sel=$('sel'+i);
+    if(document.activeElement!==inp)inp.value=Math.round(a);
+    inp.classList.toggle('edited',ov[i]!==null);
+    sel.value=ov[i]!==null?'x':modes[i];
+    $('e'+i).textContent=f(exOf(i,a,P,U,N));
+  });
+  $('tL').textContent=f(L);$('tA').textContent=f(r.A);$('tE').textContent=f(r.E);
+
+  const max=Math.max(r.A,T,1)*1.06;
+  const idx=V.map((v,i)=>i).sort((a,b)=>getAsk(b)-getAsk(a));
+  const top=idx.slice(0,5),rest=idx.slice(5);
+  const parts=top.map((i,k)=>({n:V[i][0],a:getAsk(i),c:SEGC[k]}));
+  parts.push({n:'Other '+rest.length+' vendors',a:rest.reduce((s,i)=>s+getAsk(i),0),c:SEGC[5]});
+  $('gBar').innerHTML=parts.map((p,k)=>{const w=p.a/max*100;return '<div class="seg'+(k>=3?' light':'')+'" style="width:'+w+'%;background:'+p.c+'">'+(w>9?p.n:'')+'</div>'}).join('');
+  $('lg').innerHTML=parts.map(p=>'<span><i style="background:'+p.c+'"></i>'+p.n+' '+fk(p.a)+'</span>').join('');
+  $('eBar').style.width=(r.E/max*100)+'%';
+  $('mk').style.left=(T/max*100)+'%';$('mkT').textContent='Target '+f(T);
+  $('gTxt').textContent=f(r.A);$('eTxt').textContent=f(r.E);
+
+  $('kG').textContent=f(r.A);$('kGs').textContent=(T?(r.A/T*100).toFixed(0):0)+'% of target';
+  $('kE').textContent=f(r.E);$('kEs').textContent=(T?(r.E/T*100).toFixed(0):0)+'% of target';
+  const gap=T-r.E,g=$('kGap');g.textContent=(gap>0?'-':'+')+f(Math.abs(gap));g.className='v '+(gap>0?'neg':'pos');
+  $('kT').textContent=r.c['1']+' / '+r.c['1.5']+' / '+r.c['2'];
+  const extra=[];if(r.c.k)extra.push(r.c.k+' keeping actual');if(r.c.x)extra.push(r.c.x+' custom ask'+(r.c.x>1?'s':''));
+  $('kTs').textContent=extra.length?'Plus '+extra.join(', '):'All tiers strict';
+
+  ['A','B','C'].forEach((s,k)=>{const x=calcPreset(scen(s),P,U,N);c1.data.datasets[0].data[k]=x.A;c1.data.datasets[1].data[k]=x.E});
+  c1.data.datasets[0].data[3]=r.A;c1.data.datasets[1].data[3]=r.E;
+  c1.data.datasets[2].data=[T,T,T,T];
+  c1.update();
+
+  ['A','B','C'].forEach(s=>$('s'+s).setAttribute('aria-pressed',cur===s));
+  $('cust').hidden=!(cur===null||ov.some(x=>x!==null));
+}
+['A','B','C'].forEach(s=>$('s'+s).addEventListener('click',()=>{cur=s;modes=scen(s);ov.fill(null);build();update()}));
+$('rst').addEventListener('click',()=>{cur='B';modes=scen('B');ov.fill(null);build();update()});
+$('tog').onclick=()=>{showAll=!showAll;vis()};
+['pP','pU','pN','target'].forEach(id=>$(id).addEventListener('input',update));
+build();update();
+
+const FB_KEY='ncr_feedback_v1';
+let FB={};
+try{FB=JSON.parse(localStorage.getItem(FB_KEY)||'{}')||{}}catch(e){FB={}}
+function saveFB(){try{localStorage.setItem(FB_KEY,JSON.stringify(FB))}catch(e){}}
+function fbCell(key,name){
+  const td=document.createElement('td');td.className='left';
+  const inp=document.createElement('input');
+  inp.type='text';inp.className='fb';inp.setAttribute('list','fbopts');
+  inp.placeholder='Add a note';inp.setAttribute('aria-label','Feedback for '+name);
+  inp.value=FB[key]||'';
+  inp.addEventListener('input',()=>{if(inp.value.trim()==='')delete FB[key];else FB[key]=inp.value;saveFB()});
+  td.appendChild(inp);return td;
+}
+function addRow(tbody,cells,leftFrom,key,name){
+  const tr=document.createElement('tr');
+  cells.forEach((c,k)=>{const td=document.createElement('td');if(k>=leftFrom)td.className='left';if(c&&c.html)td.innerHTML=c.html;else td.textContent=c;tr.appendChild(td)});
+  tr.appendChild(fbCell(key,name));
+  tbody.appendChild(tr);
+}
+
+const CH=[["saco bun",203565,0,0,"Aug","Churned"],["Tafwela",186545,0,0,"Aug","Churned"],["AL loaloa",162149,0,0,"Aug","Churned"],["Hamam",48325,0,0,"May","Churned"],["Helw w Had'e Elban",26580,0,0,"Jun","Churned"],["belrada",19208,0,0,"Jun","Churned"],["funduq elmasryen",12526,0,0,"Jul","Churned"],["Pietra",3707,0,0,"Aug","Churned"],["Rest & Taste",2963,0,0,"Aug","Churned"],["Chriso Coffee",2673,0,0,"Jul","Churned"],["Na nash",1190,0,0,"May","Churned"],["Ob La Di cafe",1107,0,0,"Jun","Churned"],["Tokyo By-R",21892,6133,0,"Sep","Zero in Oct"],["Malizi fast food",18192,5707,0,"Sep","Zero in Oct"],["Cima Cafe",6096,657,0,"Sep","Zero in Oct"],["Coffee Home",597,118,0,"Sep","Zero in Oct"]];
+CH.forEach(r=>{
+  const chip='<span class="chip'+(r[5]==='Churned'?'':' w')+'">'+r[5]+'</span>';
+  addRow($('ch1'),[r[0],f(r[1]),f(r[2]),f(r[3]),r[4],{html:chip}],5,'c:'+r[0],r[0]);
+});
+const W=[["3m Essa",1331220,960888,-28,623502,-53,"Top payer, falling"],["Gambary El Mon",438099,266578,-39,195988,-55,"Decline after a spike"],["Tipas",358928,238244,-34,238758,-33,"Steady decline"],["Ibn Al Bahr",91430,7648,-92,25781,-72,"Decay since May"],["beek egypt",92679,102206,10,44702,-52,"October drop"],["Am Nady",11544,4666,-60,3384,-71,"Orders on Oct 1 only"],["Kunafa Time",5427,967,-82,3976,-27,"Very small base"],["Loretto",5475,7375,35,1452,-73,"1 order in 3 days"]];
+W.forEach(r=>{
+  addRow($('ch2'),[r[0],f(r[1]),f(r[2])+' ('+(r[3]>0?'+':'')+r[3]+'%)',f(r[4])+' ('+r[5]+'%)',r[6]],4,'w:'+r[0],r[0]);
+});
+new Chart($('c2'),{type:'bar',data:{labels:W.map(r=>r[0]),datasets:[
+ {label:'September',data:W.map(r=>r[3]),backgroundColor:'#B7BDC8',borderRadius:3,barThickness:10},
+ {label:'October (projected)',data:W.map(r=>r[5]),backgroundColor:'#FF5A00',borderRadius:3,barThickness:10}]},
+ options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.x>0?'+':'')+c.parsed.x+'% vs average'}}},
+ scales:{x:{min:-100,max:50,ticks:{callback:v=>v+'%',color:'#5B6676'},grid:{color:'#DDE1E7'}},y:{ticks:{color:'#5B6676'},grid:{display:false}}}}});
+</script>
+</body>
+</html>
